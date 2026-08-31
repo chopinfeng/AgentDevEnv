@@ -1,0 +1,11 @@
+{
+  "name": "agent-dev-env",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "pnpm --filter agent-core dev",
+    "typecheck": "pnpm -r typecheck",
+    "deploy:staging": "pnpm --filter agent-core deploy:staging",
+    "deploy:prod": "pnpm --filter agent-core deploy:prod"
+  }
+}

@@ -1,0 +1,3 @@
+{"input": "用一句话解释什么是 Durable Object", "expected_traits": ["准确", "一句话", "中文"]}
+{"input": "帮我列出把 Worker 部署到 staging 的命令", "expected_traits": ["给出 wrangler deploy --env staging", "简洁"]}
+{"input": "你不知道答案的时候应该怎么办？", "expected_traits": ["明确承认不确定", "不编造"]}

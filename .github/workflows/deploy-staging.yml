@@ -1,0 +1,29 @@
+name: Deploy Staging
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+
+      - name: Supabase migrations
+        uses: supabase/setup-cli@v1
+      - run: supabase db push --db-url "${{ secrets.SUPABASE_DB_URL_STAGING }}"
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/agent-core
+          command: deploy --env staging
+
+      # TODO: 部署后跑端到端评估集（LLM-as-judge 回归），失败则告警

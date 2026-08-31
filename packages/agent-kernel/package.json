@@ -1,0 +1,15 @@
+{
+  "name": "@agentdev/agent-kernel",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@agentdev/prompts": "workspace:*",
+    "@agentdev/shared": "workspace:*",
+    "@ai-sdk/anthropic": "latest",
+    "ai": "^7.0.0"
+  },
+  "devDependencies": { "typescript": "^5.7.0" }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agent-core",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  "durable_objects": {
+    "bindings": [{ "name": "MainAgent", "class_name": "MainAgent" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MainAgent"] }],
+
+  // AGENT_FRAMEWORK 是唯一的框架开关。可选值见
+  // packages/agent-kernel/src/registry.ts 的 FRAMEWORKS。
+  // 改这一个值即可换框架 —— bindings、migrations、routes 都不动。
+  "vars": {
+    "ENVIRONMENT": "local",
+    "AGENT_FRAMEWORK": "cf-agents",
+    "HEAVY_RUNNER_URL": ""
+  },
+
+  // 密钥（wrangler secret put / .dev.vars）：
+  //   ANTHROPIC_API_KEY        — LLM 调用
+  //   SUPABASE_URL             — Supabase 项目地址
+  //   SUPABASE_SERVICE_KEY     — Supabase service role key
+  //   AI_GATEWAY_BASE_URL      — 可选，走 AI Gateway 时设置
+
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "AGENT_FRAMEWORK": "cf-agents",
+        "HEAVY_RUNNER_URL": ""
+      },
+      "durable_objects": {
+        "bindings": [{ "name": "MainAgent", "class_name": "MainAgent" }]
+      }
+      // 上线前补充：routes（api.staging.yourdomain.com）、d1_databases、kv_namespaces、r2_buckets
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production",
+        "AGENT_FRAMEWORK": "cf-agents",
+        "HEAVY_RUNNER_URL": ""
+      },
+      "durable_objects": {
+        "bindings": [{ "name": "MainAgent", "class_name": "MainAgent" }]
+      }
+      // 上线前补充：routes（api.yourdomain.com）等，资源 ID 与 staging 分开
+    }
+  }
+}

@@ -1,0 +1,14 @@
+# 复制为 .dev.vars（已 gitignore）供 wrangler dev 使用
+ANTHROPIC_API_KEY=sk-ant-...
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SERVICE_KEY=eyJ...
+
+# 框架开关（也可在 wrangler.jsonc 的 vars 里设）：
+#   cf-agents | mastra | remote:langgraph | remote:claude-code | remote:pi
+# AGENT_FRAMEWORK=cf-agents
+
+# 选 remote:* 时指向本地 heavy-runner
+# HEAVY_RUNNER_URL=http://localhost:8080
+
+# 可选：统一走 AI Gateway
+# AI_GATEWAY_BASE_URL=https://gateway.ai.cloudflare.com/v1/<account_id>/<gateway>/anthropic

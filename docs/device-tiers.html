@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设备分层与工具层</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body {
+    margin: 0; background: #F6F7F9; color: #1B2430;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    padding: 3rem 2rem 4rem;
+  }
+  .page { max-width: 1160px; margin: 0 auto; }
+  .eyebrow {
+    font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.18em;
+    color: #C25E08; text-transform: uppercase; margin: 0 0 0.75rem;
+  }
+  h1 {
+    font-family: 'Instrument Serif', 'Noto Serif SC', serif; font-weight: 400;
+    font-size: 1.75rem; margin: 0 0 0.5rem;
+  }
+  .subtitle { color: #5A6572; font-size: 14px; margin: 0 0 2rem; max-width: 48em; }
+  .diagram { overflow-x: auto; }
+  .aside {
+    font-family: 'Instrument Serif', serif; font-style: italic; font-size: 14px;
+    color: #5A6572; margin: 1.5rem 0 0; max-width: 46em;
+  }
+  footer {
+    margin-top: 2.5rem; padding-top: 1rem;
+    border-top: 1px solid rgba(27,36,48,0.10);
+    font-family: 'Geist Mono', monospace; font-size: 10px; color: #5A6572;
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">Device Tiers · Tool Layer</p>
+  <h1>设备分层与工具层</h1>
+  <p class="subtitle">MCU 不做 Agent host —— ESP32 上 260K 参数模型约 19 tok/s，没有工具调用能力。设备负责感知与执行，Agent 循环留在云端。设备能力、MCP 服务器与 Skills 汇聚成同一份工具集，交给任意框架。</p>
+
+  <div class="diagram">
+  <svg viewBox="0 0 1120 620" width="1120" role="img" aria-labelledby="device-tiers-title device-tiers-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="device-tiers-title">设备分层与工具层</title>
+    <desc id="device-tiers-desc">架构图：ESP32 与树莓派通过 WebSocket 长连接挂到云端 Durable Object，各自的能力经设备注册表转成工具；工具层再汇总 MCP 服务器工具与 Skills，形成统一工具集供 Agent 框架调用。</desc>
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#5A6572"/>
+      </marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#C25E08"/>
+      </marker>
+      <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#2C5FA8"/>
+      </marker>
+    </defs>
+
+    <rect width="100%" height="100%" fill="#F6F7F9"/>
+
+    <!-- ═══ zones ═══ -->
+    <!-- 设备侧 -->
+    <rect x="40" y="56" width="248" height="304" rx="8" fill="rgba(27,36,48,0.02)" stroke="rgba(27,36,48,0.10)" stroke-width="0.8"/>
+    <rect x="52" y="60" width="164" height="12" rx="2" fill="#F6F7F9"/>
+    <text x="134" y="69" fill="rgba(27,36,48,0.45)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">设备侧 · 现场</text>
+
+    <!-- 云端 DO -->
+    <rect x="368" y="56" width="336" height="304" rx="8" fill="rgba(27,36,48,0.02)" stroke="rgba(27,36,48,0.10)" stroke-width="0.8"/>
+    <rect x="380" y="60" width="216" height="12" rx="2" fill="#F6F7F9"/>
+    <text x="488" y="69" fill="rgba(27,36,48,0.45)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">云端 · DURABLE OBJECT（环境，固定）</text>
+
+    <!-- ═══ arrows ═══ -->
+    <!-- ESP32 → 设备注册表 -->
+    <path d="M 208,140 H 344 Q 352,140 352,148 V 180 Q 352,188 360,188 H 396" fill="none" stroke="#2C5FA8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+    <rect x="228" y="120" width="96" height="12" rx="2" fill="#F6F7F9"/>
+    <text x="276" y="129" fill="#2C5FA8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">WS · min 方言</text>
+
+    <!-- 树莓派 → 设备注册表 -->
+    <path d="M 208,276 H 344 Q 352,276 352,268 V 224 Q 352,216 360,216 H 396" fill="none" stroke="#2C5FA8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+    <rect x="224" y="256" width="104" height="12" rx="2" fill="#F6F7F9"/>
+    <text x="276" y="265" fill="#2C5FA8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">WS · mcp 方言</text>
+
+    <!-- 设备注册表 → 工具层 -->
+    <line x1="536" y1="202" x2="580" y2="202" stroke="#5A6572" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+    <!-- 外部 MCP → 工具层（从上方进入） -->
+    <path d="M 848,124 H 656 Q 648,124 648,132 V 164" fill="none" stroke="#5A6572" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="700" y="104" width="92" height="12" rx="2" fill="#F6F7F9"/>
+    <text x="746" y="113" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">STREAMABLE</text>
+
+    <!-- Skills → 工具层（从下方进入） -->
+    <path d="M 848,300 H 656 Q 648,300 648,292 V 264" fill="none" stroke="#5A6572" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="712" y="280" width="68" height="12" rx="2" fill="#F6F7F9"/>
+    <text x="746" y="289" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">按需加载</text>
+
+    <!-- 工具层 → 适配器 -->
+    <path d="M 648,264 V 400 Q 648,408 640,408 H 588" fill="none" stroke="#C25E08" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+    <rect x="656" y="336" width="72" height="12" rx="2" fill="#F6F7F9"/>
+    <text x="692" y="345" fill="#C25E08" font-size="8" font-family="'Geist Mono', monospace" text-anchor="start" letter-spacing="0.06em">JSON SCHEMA</text>
+
+    <!-- ═══ nodes ═══ -->
+    <!-- ESP32 -->
+    <rect x="64" y="104" width="144" height="72" rx="6" fill="#F6F7F9"/>
+    <rect x="64" y="104" width="144" height="72" rx="6" fill="rgba(90,101,114,0.10)" stroke="#8A93A0" stroke-width="1"/>
+    <rect x="72" y="112" width="36" height="12" rx="2" fill="transparent" stroke="rgba(90,101,114,0.45)" stroke-width="0.8"/>
+    <text x="90" y="121" fill="#5A6572" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MCU</text>
+    <text x="136" y="144" fill="#1B2430" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', sans-serif" text-anchor="middle">ESP32</text>
+    <text x="136" y="160" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">520KB SRAM · 传感/执行</text>
+
+    <!-- 树莓派 -->
+    <rect x="64" y="240" width="144" height="72" rx="6" fill="#F6F7F9"/>
+    <rect x="64" y="240" width="144" height="72" rx="6" fill="rgba(90,101,114,0.10)" stroke="#8A93A0" stroke-width="1"/>
+    <rect x="72" y="248" width="36" height="12" rx="2" fill="transparent" stroke="rgba(90,101,114,0.45)" stroke-width="0.8"/>
+    <text x="90" y="257" fill="#5A6572" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SBC</text>
+    <text x="136" y="280" fill="#1B2430" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', sans-serif" text-anchor="middle">树莓派</text>
+    <text x="136" y="296" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">本地 MCP · 离线兜底</text>
+
+    <!-- 设备注册表 -->
+    <rect x="396" y="164" width="140" height="76" rx="6" fill="#F6F7F9"/>
+    <rect x="396" y="164" width="140" height="76" rx="6" fill="#FFFFFF" stroke="#1B2430" stroke-width="1"/>
+    <text x="466" y="192" fill="#1B2430" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', sans-serif" text-anchor="middle">设备注册表</text>
+    <text x="466" y="208" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">能力 → 工具</text>
+    <text x="466" y="222" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">可休眠不计费</text>
+
+    <!-- 工具层（焦点） -->
+    <rect x="580" y="164" width="136" height="100" rx="6" fill="#F6F7F9"/>
+    <rect x="580" y="164" width="136" height="100" rx="6" fill="#FBEEDF" stroke="#C25E08" stroke-width="1.2"/>
+    <text x="648" y="192" fill="#1B2430" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', sans-serif" text-anchor="middle">统一工具层</text>
+    <text x="648" y="212" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">device + mcp</text>
+    <text x="648" y="226" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">+ skill + builtin</text>
+    <text x="648" y="246" fill="#C25E08" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">框架中立</text>
+
+    <!-- 外部 MCP 服务器 -->
+    <rect x="852" y="96" width="176" height="60" rx="6" fill="#F6F7F9"/>
+    <rect x="852" y="96" width="176" height="60" rx="6" fill="rgba(27,36,48,0.03)" stroke="rgba(27,36,48,0.30)" stroke-width="1"/>
+    <text x="940" y="120" fill="#1B2430" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', sans-serif" text-anchor="middle">外部 MCP 服务器</text>
+    <text x="940" y="136" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">addMcpServer()</text>
+
+    <!-- Skills -->
+    <rect x="852" y="272" width="176" height="72" rx="6" fill="#F6F7F9"/>
+    <rect x="852" y="272" width="176" height="72" rx="6" fill="rgba(27,36,48,0.05)" stroke="#5A6572" stroke-width="1"/>
+    <text x="940" y="296" fill="#1B2430" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', sans-serif" text-anchor="middle">Skills</text>
+    <text x="940" y="312" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">bundled + R2</text>
+    <text x="940" y="326" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">渐进式披露</text>
+
+    <!-- 框架适配器 -->
+    <rect x="424" y="376" width="164" height="64" rx="6" fill="#F6F7F9"/>
+    <rect x="424" y="376" width="164" height="64" rx="6" fill="#FFFFFF" stroke="#1B2430" stroke-width="1"/>
+    <text x="506" y="400" fill="#1B2430" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', sans-serif" text-anchor="middle">框架适配器</text>
+    <text x="506" y="416" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">cf-agents / remote:*</text>
+    <text x="506" y="430" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AGENT_FRAMEWORK</text>
+
+    <!-- ═══ legend ═══ -->
+    <line x1="40" y1="500" x2="1080" y2="500" stroke="rgba(27,36,48,0.10)" stroke-width="0.8"/>
+    <text x="40" y="520" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+
+    <rect x="120" y="512" width="12" height="8" rx="2" fill="#FBEEDF" stroke="#C25E08" stroke-width="1"/>
+    <text x="140" y="520" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace">焦点组件</text>
+
+    <rect x="260" y="512" width="12" height="8" rx="2" fill="rgba(90,101,114,0.10)" stroke="#8A93A0" stroke-width="1"/>
+    <text x="280" y="520" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace">现场设备</text>
+
+    <rect x="400" y="512" width="12" height="8" rx="2" fill="#FFFFFF" stroke="#1B2430" stroke-width="1"/>
+    <text x="420" y="520" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace">服务组件</text>
+
+    <rect x="540" y="512" width="12" height="8" rx="2" fill="rgba(27,36,48,0.05)" stroke="#5A6572" stroke-width="1"/>
+    <text x="560" y="520" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace">存储</text>
+
+    <line x1="660" y1="516" x2="688" y2="516" stroke="#2C5FA8" stroke-width="1.2"/>
+    <text x="696" y="520" fill="#5A6572" font-size="8" font-family="'Geist Mono', monospace">设备长连接</text>
+
+    <!-- 编者注 -->
+    <line x1="40" y1="556" x2="1080" y2="556" stroke="rgba(27,36,48,0.10)" stroke-width="0.8"/>
+    <text x="40" y="578" fill="#5A6572" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">注：WebSocket 不是 MCP 官方 transport（SEP-1287/1288 已关闭），两种设备方言均为规范允许的 custom transport。</text>
+  </svg>
+  </div>
+
+  <p class="aside">设备方言二选一：min 是自定义极简帧，ESP32 固件约 200 行、不实现 JSON-RPC；mcp 是把 JSON-RPC 包在信封里，与 xiaozhi-esp32 同款做法，可直接接入已在跑 Espressif mcp-c-sdk 的设备。</p>
+
+  <footer>AGENTDEVENV · 设备分层 · 数据核实于 2026-08</footer>
+</div>
+</body>
+</html>

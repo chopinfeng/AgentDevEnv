@@ -1,0 +1,29 @@
+name: Evolve Prompts
+on:
+  schedule:
+    - cron: "0 2 * * 1"   # 每周一 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r evolution/requirements.txt
+
+      - name: Run evolution pipeline (DSPy + GEPA)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python evolution/optimize.py
+
+      - name: Open PR with evolved prompts
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: evolve/prompts
+          title: "evolve: 更新优化后的 prompt"
+          body: "由进化管线自动生成。合并前必须通过评估门禁 + 人工审批。"
+          commit-message: "evolve: update optimized prompts"
+          add-paths: packages/prompts/**

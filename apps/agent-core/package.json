@@ -1,0 +1,22 @@
+{
+  "name": "agent-core",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:prod": "wrangler deploy --env production"
+  },
+  "dependencies": {
+    "@agentdev/agent-kernel": "workspace:*",
+    "@agentdev/prompts": "workspace:*",
+    "@agentdev/shared": "workspace:*",
+    "agents": "^0.22.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260831.1",
+    "typescript": "^5.7.0",
+    "wrangler": "latest"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env
+*.local
+__pycache__/
+.venv/
+.DS_Store
+supabase/.temp/
