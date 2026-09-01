@@ -1,6 +1,6 @@
 ---
 name: agent-dev-env
-description: 搭建 AI Agent 项目的工程化开发环境并让它能上生产——项目脚手架、本地/测试/生产三环境、可插拔的 Agent 框架层、MCP 与 Skills 工具体系、评估与回归门禁、可靠性与成本控制、低算力设备接入。当用户要新建 Agent 项目、规划 Agent 工程结构、给 Agent 划分部署环境、接入 MCP 工具或 Skills、建立 Agent 评估与回归体系、治理 prompt 版本、控制 Agent 成本、做 Agent 上线前检查、在多个 Agent 框架间选型或切换、或让 Agent 控制 ESP32／树莓派等硬件时，使用这个 skill。用户只说"帮我搭个 agent 项目""agent 工程怎么组织""我的 agent 怎么上线"这类模糊需求时也应该用它。
+description: 搭建 AI Agent 项目的工程化开发环境并让它能上生产——项目脚手架、本地/测试/生产三环境、可插拔的 Agent 框架层、MCP 与 Skills 工具体系、知识库/RAG 接入、评估与回归门禁、可靠性与成本控制、低算力设备接入。当用户要新建 Agent 项目、规划或重构 Agent 的工程结构与代码分层、给 Agent 划分部署环境、接入 MCP 工具／Skills／知识库（含按部门或角色的权限隔离）、建立 Agent 评估与回归体系、治理 prompt 版本、排查 Agent 的 token 消耗或账单异常、做上线前检查、在多个 Agent 框架间选型或切换、或让 Agent 控制 ESP32／树莓派等硬件时，使用这个 skill。用户常常只描述症状而不点名——「agent 代码全堆在一个文件里」「账单突然翻倍」「改完 prompt 不知道是变好还是变坏」「下周要上线心里没底」这类同样该触发。
 ---
 
 # Agent 开发环境搭建

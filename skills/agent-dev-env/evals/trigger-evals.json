@@ -1,0 +1,107 @@
+{
+  "skill_name": "agent-dev-env",
+  "note": "触发 eval：检验 description 能否在该触发时触发、不该触发时不触发。负例全部是「近似误判」——共享关键词但真实需求不同。明显无关的负例（如「写个快排」）没有测试价值，不要加。每条建议跑 3 次取触发率，阈值 0.5。",
+  "evals": [
+    {
+      "query": "我们组要做一个内部的报销审批 agent，接飞书和 NetSuite。项目结构该怎么搭？本地怎么调试，测试环境和生产怎么分？",
+      "should_trigger": true,
+      "covers": "新建项目 + 环境划分"
+    },
+    {
+      "query": "帮我看下这个 agent 项目怎么组织比较好，现在所有东西都堆在一个 index.ts 里，两千多行了",
+      "should_trigger": true,
+      "covers": "工程结构（未提「环境」等关键词）"
+    },
+    {
+      "query": "我们的 agent 现在用的 LangGraph，但团队想试试 Cloudflare Agents SDK。有没有办法让以后换框架不用大改？",
+      "should_trigger": true,
+      "covers": "框架 seam"
+    },
+    {
+      "query": "agent 要接十几个 MCP server，工具会不会太多把上下文撑爆？另外想加一批内部的操作手册让它按流程走",
+      "should_trigger": true,
+      "covers": "MCP + Skills 渐进式披露"
+    },
+    {
+      "query": "下周 agent 要给真实客户用了，能改用户的订阅计划。我心里没底，上线前还该做什么",
+      "should_trigger": true,
+      "covers": "上线前检查（未提「checklist」）"
+    },
+    {
+      "query": "这个月 agent 的 api 账单翻了三倍，用量没怎么涨。怎么查是哪出问题了，怎么控住",
+      "should_trigger": true,
+      "covers": "成本控制"
+    },
+    {
+      "query": "每次改完 prompt 都不知道是变好还是变坏，全靠手工试几条。想搞个自动化的回归，改完能看出有没有退步",
+      "should_trigger": true,
+      "covers": "评估与回归门禁"
+    },
+    {
+      "query": "办公室有几个 esp32 的传感器，想让公司的 agent 能读到数据，也能反过来控制设备。这个架构怎么设计",
+      "should_trigger": true,
+      "covers": "设备接入"
+    },
+    {
+      "query": "内部 agent 要接 confluence 的知识库，但是不同部门文档权限不一样，怕串了",
+      "should_trigger": true,
+      "covers": "知识库 + 权限边界"
+    },
+    {
+      "query": "agent 的 prompt 现在直接写在代码里，每次改一个字都要发版。有没有更好的管理方式，最好能快速回滚",
+      "should_trigger": true,
+      "covers": "prompt 版本治理"
+    },
+
+    {
+      "query": "帮我写一个 MCP server，把我们的内部 CRM 的查询接口暴露出去，Python 的",
+      "should_trigger": false,
+      "covers": "近似误判：MCP 但是在「造 server」，应让 mcp-builder 类 skill 胜出"
+    },
+    {
+      "query": "帮我搭一个 React + Vite 的项目脚手架，要带 tailwind 和 eslint",
+      "should_trigger": false,
+      "covers": "近似误判：脚手架 + 项目结构，但与 agent 无关"
+    },
+    {
+      "query": "这段 prompt 太啰嗦了帮我精简一下，另外语气改得专业点：「您好呀～我是您的贴心小助手…」",
+      "should_trigger": false,
+      "covers": "近似误判：prompt 但是措辞改写，不是版本治理"
+    },
+    {
+      "query": "Cloudflare 的 KV 和 D1 有什么区别，我这个场景该用哪个？要存用户的偏好设置，几万条",
+      "should_trigger": false,
+      "covers": "近似误判：Cloudflare 平台选型，属 cloudflare skill 的 API 细节层"
+    },
+    {
+      "query": "我的 esp32 刷完固件之后连不上 wifi 了，串口一直打印 wifi disconnected reason 201",
+      "should_trigger": false,
+      "covers": "近似误判：ESP32 但是硬件调试，与 agent 架构无关"
+    },
+    {
+      "query": "帮我写一个 skill，把我们团队 code review 的规范固化进去",
+      "should_trigger": false,
+      "covers": "近似误判：Skills 但是在「造 skill」，应让 skill-creator 胜出"
+    },
+    {
+      "query": "解释一下 ReAct 和 Plan-and-Execute 这两种 agent 范式的区别，各自适合什么场景",
+      "should_trigger": false,
+      "covers": "近似误判：agent 概念问答，不需要工程化落地"
+    },
+    {
+      "query": "帮我 review 一下这个 agent 的代码，看有没有 bug 或者可以简化的地方 src/agent/handler.ts",
+      "should_trigger": false,
+      "covers": "近似误判：agent 代码，但需求是 code review"
+    },
+    {
+      "query": "langgraph 的 StateGraph 怎么加条件边？我想根据上一步的返回值决定走哪个分支",
+      "should_trigger": false,
+      "covers": "近似误判：agent 框架，但问的是具体 API 用法"
+    },
+    {
+      "query": "我们 agent 的 CI 跑不过了，报 pnpm install 的 lockfile 冲突，本地是好的",
+      "should_trigger": false,
+      "covers": "近似误判：agent 项目 + CI，但是常规构建问题排查"
+    }
+  ]
+}

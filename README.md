@@ -40,8 +40,10 @@ skills/
 docs/             # 架构图与蓝图
 ```
 
-> `skills/agent-dev-env/` 是这套架构的通用化版本 —— 换个项目也能用。含脚手架脚本：
-> `python skills/agent-dev-env/scripts/scaffold.py <目录>`
+> `skills/agent-dev-env/` 是这套架构的通用化版本 —— 换个项目也能用。
+>
+> - 脚手架：`python3 skills/agent-dev-env/scripts/scaffold.py <目录>`（产出可直接 `pnpm install && pnpm typecheck`）
+> - 评测：`skills/agent-dev-env/evals/`——任务 eval（有/无 skill 对比产出）+ 触发 eval（description 准确率）
 
 ## 换 Agent 框架
 
