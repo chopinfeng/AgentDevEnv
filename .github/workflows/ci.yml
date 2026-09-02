@@ -16,8 +16,14 @@ jobs:
       - run: pnpm typecheck
 
   preview:
-    # PR 预览：上传一个不接流量的版本，得到预览 URL
-    if: github.event_name == 'pull_request'
+    # PR 预览：上传一个不接流量的版本，得到预览 URL。
+    #
+    # 只对本仓库分支的 PR 跑。来自 fork 的 PR 拿不到 secrets
+    # （GitHub 的保护机制，GITHUB_TOKEN 除外），跑了必然失败，
+    # 只会给贡献者留一堆红叉。校验本身在 check 任务里，fork PR 照跑。
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     needs: check
     runs-on: ubuntu-latest
     steps:
