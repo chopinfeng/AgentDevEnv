@@ -30,6 +30,7 @@ packages/
   agent-kernel/   # 框架 seam + 工具层 + Skills
   prompts/        # 版本化 prompt（进化产物经 PR 回写）
   shared/         # 共享类型
+deploy/           # 目标机侧的拉取式部署代理 + systemd 单元
 devices/
   esp32/          # ESP32 固件（Arduino）
   raspberry-pi/   # 树莓派 agent host
@@ -99,6 +100,12 @@ wss://<host>/agents/main-agent/<session>?role=device&dialect=<min|mcp>&device=<i
 > WebSocket **不是** MCP 官方 transport（SEP-1287/1288 已关闭为 dormant），两种方言都是规范允许的 custom transport，按一帧一行 JSON 走。MCP 规范 2026-07-28 版已移除 `initialize` 握手，故 `mcp` 方言连上直接发 `tools/list`。
 
 ## 部署
+
+开发机、CI、部署目标可以是三台不同机器。边缘走推、容器走拉，见
+[docs/deployment-topology.md](docs/deployment-topology.md)。
+
+> ⚠️ 本仓库是公开的，**不要在目标机上装 self-hosted runner**——fork PR
+> 能在你机器上执行任意代码。内网部署用 `deploy/pull-agent.sh` 主动拉。
 
 | | Local | Staging | Production |
 |---|---|---|---|

@@ -594,6 +594,144 @@ EVALSET = '''\
 {"input": "把这句话原样返回：测试", "expected_tools": ["echo"], "tags": ["tools"]}
 '''
 
+
+BUILD_CONTAINER_YML = """\
+name: Build Container
+
+# 构建容器镜像并推到 GHCR。跑在 GitHub 托管 runner 上，不碰私有网络，
+# 因此公开仓库也安全。部署到哪台机器由目标机自己拉（见 deploy/pull-agent.sh）。
+#
+# 认证用内置 GITHUB_TOKEN，不需要存长期密钥。
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/heavy-runner/**", ".github/workflows/build-container.yml"]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}/heavy-runner
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=edge,enable={{is_default_branch}}
+            type=sha,format=short
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/heavy-runner
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+"""
+
+PULL_AGENT = """\
+#!/usr/bin/env bash
+# 目标机上的拉取式部署代理。
+#
+# 为什么是拉不是推：目标机在 NAT/防火墙后时，拉模型只需出站连接；
+# 且 CI 里不必存目标机凭证。**公开仓库尤其不要在目标机装 self-hosted
+# runner** —— GitHub 官方说那「几乎永远不应该」做，fork PR 能在你机器上
+# 执行任意代码。
+#
+# 用法：./pull-agent.sh once   |   ./pull-agent.sh watch
+# 需要：IMAGE（镜像地址）、TAG（默认 edge）、ENV_FILE
+set -euo pipefail
+
+IMAGE="${IMAGE:?需要设置 IMAGE，例如 ghcr.io/owner/repo/heavy-runner}"
+TAG="${TAG:-edge}"
+CONTAINER="${CONTAINER:-heavy-runner}"
+PORT="${PORT:-8080}"
+INTERVAL="${INTERVAL:-60}"
+STATE_FILE="${STATE_FILE:-$HOME/.heavy-runner-digest}"
+
+log() { printf '[%s] %s\\n' "$(date '+%F %T')" "$*"; }
+
+deploy_once() {
+  [ -n "${GHCR_TOKEN:-}" ] && echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USER:?}" --password-stdin >/dev/null
+
+  local remote current
+  # 按 digest 比对而非 tag —— tag 会被覆盖，digest 不会
+  remote="$(docker manifest inspect "$IMAGE:$TAG" 2>/dev/null | sha256sum | cut -d' ' -f1)" \\
+    || { log "拉取 manifest 失败，跳过本轮"; return 0; }
+  current="$(cat "$STATE_FILE" 2>/dev/null || true)"
+  [ "$remote" = "$current" ] && { log "已是最新"; return 0; }
+
+  log "发现新版本，更新中"
+  docker pull "$IMAGE:$TAG"
+
+  # 先起新的做健康检查，通过了再切 —— 不过就保留旧容器
+  local new="${CONTAINER}-new"
+  docker rm -f "$new" 2>/dev/null || true
+  docker run -d --name "$new" --env-file "${ENV_FILE:-$HOME/heavy-runner.env}" \\
+    -p "$((PORT + 1)):8080" --restart unless-stopped "$IMAGE:$TAG"
+
+  local ok=0
+  for _ in $(seq 1 30); do
+    curl -fsS "http://127.0.0.1:$((PORT + 1))/health" >/dev/null 2>&1 && { ok=1; break; }
+    sleep 2
+  done
+
+  if [ "$ok" -ne 1 ]; then
+    log "❌ 健康检查未通过，回滚（保留旧容器）"
+    docker logs --tail 30 "$new" || true
+    docker rm -f "$new" >/dev/null 2>&1 || true
+    return 1
+  fi
+
+  docker rm -f "$new" >/dev/null
+  docker rm -f "$CONTAINER" 2>/dev/null || true
+  docker run -d --name "$CONTAINER" --env-file "${ENV_FILE:-$HOME/heavy-runner.env}" \\
+    -p "$PORT:8080" --restart unless-stopped "$IMAGE:$TAG"
+
+  echo "$remote" > "$STATE_FILE"
+  log "✅ 已更新到 $IMAGE:$TAG"
+}
+
+case "${1:-once}" in
+  once)  deploy_once ;;
+  watch) log "轮询中，每 ${INTERVAL}s"; while true; do deploy_once || true; sleep "$INTERVAL"; done ;;
+  *)     echo "用法: $0 [once|watch]" >&2; exit 2 ;;
+esac
+"""
+
+DEVCONTAINER = """\
+{
+  "name": "PROJECT_NAME",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "corepack enable && pnpm install && pnpm typecheck",
+  "forwardPorts": [8787, 8080],
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
+  }
+}
+"""
+
 CI_YML = '''\
 name: CI
 on:
@@ -721,6 +859,14 @@ def main() -> None:
               "设备只做感知与执行，Agent 循环留在云端。\n"
               "连接串：`?role=device&dialect=<min|mcp>&device=<id>`\n\n"
               "协议与固件写法见 skill 的 references/edge-devices.md。\n")
+
+    # 多主机部署：容器层的交付路径（边缘之外最容易被漏掉的一层）
+    write(root, ".github/workflows/build-container.yml", BUILD_CONTAINER_YML)
+    write(root, "deploy/pull-agent.sh", PULL_AGENT)
+    (root / "deploy/pull-agent.sh").chmod(0o755)
+
+    # 开发环境可移植：换机器不用重配
+    write(root, ".devcontainer/devcontainer.json", DEVCONTAINER.replace("PROJECT_NAME", name))
 
     write(root, ".gitignore", "node_modules/\ndist/\n.wrangler/\n.dev.vars\n.env\n__pycache__/\n.venv/\n")
 

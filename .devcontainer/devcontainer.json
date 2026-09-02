@@ -1,0 +1,44 @@
+{
+  "name": "AgentDevEnv",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22-bookworm",
+
+  // 开发机可以是任意一台 —— 这份配置保证换机器后环境一致，
+  // 不用再靠「我本地是好的」来排查问题。
+  // VS Code / Cursor / JetBrains / GitHub Codespaces 都读这份规范。
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  "forwardPorts": [8787, 8080, 54321],
+  "portsAttributes": {
+    "8787": { "label": "agent-core (wrangler dev)" },
+    "8080": { "label": "heavy-runner" },
+    "54321": { "label": "supabase" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+
+  // 密钥不进镜像也不进仓库 —— 从宿主机环境传入，
+  // 容器里再写进 .dev.vars（已 gitignore）。
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "CLOUDFLARE_API_TOKEN": "${localEnv:CLOUDFLARE_API_TOKEN}"
+  }
+}

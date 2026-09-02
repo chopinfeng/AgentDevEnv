@@ -54,6 +54,19 @@ ESP32 典型规格：ESP32 约 520KB SRAM，ESP32-C3 约 400KB，ESP32-S3 约 51
 | OWASP Top 10 for LLM Applications | https://genai.owasp.org/llm-top-10/ |
 | Anthropic 评估与 rubric 指引 | https://docs.claude.com/en/docs/test-and-evaluate/develop-tests |
 
+## 部署拓扑
+
+| 主题 | 来源 |
+|---|---|
+| self-hosted runner 安全（公开仓库警告原文） | https://docs.github.com/en/actions/reference/security/secure-use |
+| fork PR 的运行审批策略 | https://docs.github.com/en/actions/how-tos/manage-workflow-runs/approve-runs-from-forks |
+| `pull_request_target` 的风险与安全用法 | https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target |
+| GitHub Actions OIDC | https://docs.github.com/en/actions/concepts/security/openid-connect |
+| Cloudflare 无 OIDC（feature request，2025-11 至今无官方回应） | https://github.com/cloudflare/workers-sdk/discussions/11434 |
+| Cloudflare Containers 镜像管理 | https://developers.cloudflare.com/containers/platform-details/image-management/ |
+| ESP-IDF OTA 与回滚 | https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/ota.html |
+| Dev Containers 规范与支持工具 | https://containers.dev/supporting |
+
 ## 规范治理的一点提醒
 
 **Agent Skills 目前不在 Linux Foundation / Agentic AI Foundation 的治理之下**（MCP、AGENTS.md、goose 在），仍由 Anthropic 主导。厂商采用面很广（约 47 家客户端），但跨厂商可移植性靠厂商自觉，不是标准组织担保的。给用户做长期技术选型建议时，这一点应当说明。

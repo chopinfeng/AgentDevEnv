@@ -1,0 +1,21 @@
+# 目标机上的 systemd 单元：定时拉取新镜像并部署。
+#
+# 安装：
+#   sudo cp deploy/heavy-runner.{service,timer} /etc/systemd/system/
+#   sudo cp deploy/pull-agent.sh /usr/local/bin/
+#   sudo systemctl enable --now heavy-runner.timer
+#
+# 配置放 /etc/heavy-runner.conf（不要进仓库）：
+#   IMAGE=ghcr.io/<owner>/<repo>/heavy-runner
+#   TAG=edge
+#   ENV_FILE=/etc/heavy-runner.env
+
+[Unit]
+Description=Pull and deploy heavy-runner
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/heavy-runner.conf
+ExecStart=/usr/local/bin/pull-agent.sh once

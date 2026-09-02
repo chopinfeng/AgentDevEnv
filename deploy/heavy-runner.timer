@@ -1,0 +1,11 @@
+[Unit]
+Description=Check for new heavy-runner image periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+# 加随机延迟，避免多台机器同时打镜像仓库
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

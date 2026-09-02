@@ -1,0 +1,71 @@
+name: Deploy (self-hosted)
+
+# ⚠️ 仅在**私有仓库**启用。启用方式：去掉 .example 后缀。
+#
+# GitHub 官方原文：self-hosted runner「几乎永远不应该」用在公开仓库上 ——
+# 任何人 fork 后提一个 PR，就能在你的机器上执行任意代码，
+# 并拿到该 runner 能访问的一切（密钥、内网、GITHUB_TOKEN）。
+# https://docs.github.com/en/actions/reference/security/secure-use
+#
+# 如果仓库是公开的，改用拉取模型：CI 只推镜像到 GHCR，
+# 目标机用 deploy/pull-agent.sh 主动拉。见 docs/deployment-topology.md
+#
+# 本文件的防护：
+#   1. 没有 pull_request 触发器 —— fork PR 根本没有入口
+#   2. 只能手动或发 release 触发
+#   3. 绑定 environment，可在仓库设置里加人工审批
+#   4. 只 checkout 被明确指定的 ref，不接受来自 PR 的代码
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "要部署的 tag 或 commit（不接受分支名，避免部署到移动目标）"
+        required: true
+
+jobs:
+  deploy:
+    # 打这些标签的 runner 装在目标机上。runner 只需出站连接，
+    # 不用开入站端口 —— 它主动连 GitHub 领任务。
+    runs-on: [self-hosted, linux, agent-target]
+    environment: production          # 在仓库设置里给它加必需审批
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.event.release.tag_name }}
+          persist-credentials: false   # 别把 token 留在目标机的 git 配置里
+
+      - name: 部署
+        env:
+          ENV_FILE: /etc/heavy-runner.env
+        run: |
+          set -euo pipefail
+          docker build -t heavy-runner:local apps/heavy-runner
+
+          # 先起新的做健康检查，通过了再切 —— 失败保留旧版本
+          docker rm -f heavy-runner-new 2>/dev/null || true
+          docker run -d --name heavy-runner-new --env-file "$ENV_FILE" -p 8081:8080 heavy-runner:local
+
+          ok=0
+          for _ in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8081/health >/dev/null 2>&1 && { ok=1; break; }
+            sleep 2
+          done
+
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::新版本健康检查未通过，已回滚（保留旧容器）"
+            docker logs --tail 30 heavy-runner-new || true
+            docker rm -f heavy-runner-new
+            exit 1
+          fi
+
+          docker rm -f heavy-runner-new
+          docker rm -f heavy-runner 2>/dev/null || true
+          docker run -d --name heavy-runner --env-file "$ENV_FILE" \
+            -p 8080:8080 --restart unless-stopped heavy-runner:local
+          echo "已部署"

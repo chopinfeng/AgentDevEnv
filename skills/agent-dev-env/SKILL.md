@@ -47,6 +47,8 @@ description: 搭建 AI Agent 项目的工程化开发环境并让它能上生产
 
 细节与 CI/CD 流水线：`references/environments.md`
 
+开发机、CI、部署目标常常不是同一台机器。**推 vs 拉的选择、公开仓库不能用 self-hosted runner、密钥放在哪**：`references/deployment-topology.md`
+
 ### 边界二：框架可换，环境不动
 
 Agent 框架迭代很快，而部署底座不该跟着晃。中间用一层适配器契约隔开：
@@ -103,6 +105,7 @@ MCU 跑不动有工具调用能力的模型。设备负责感知与执行，Agen
 | 接知识库 / RAG | `references/knowledge-base.md` | 无 |
 | 以后能换框架 | `references/framework-seam.md` | 抽 seam 时会动持久化边界，建议趁早 |
 | 补测试环境 | `references/environments.md` | 现有配置要先改成同构形态 |
+| 部署到内网机器 / 多台目标 | `references/deployment-topology.md` | 目标机能出站即可，不需要入站 |
 | 建评估体系 | `references/evaluation-and-evolution.md` | 无，且**应该最先做** |
 | 上生产前检查 | `references/reliability.md` | 无 |
 | 成本降不下来 | `references/cost-and-context.md` | 先确认缓存真的生效了 |
@@ -145,6 +148,8 @@ python3 <skill 目录>/scripts/scaffold.py <项目目录>
 **把会话状态放进业务数据库。** 高频读写的会话状态应该贴着计算放（如 DO 内置存储），业务数据才进主库。放反了延迟和成本都吃亏。
 
 **工具执行端点不鉴权。** 如果工具能驱动物理设备或产生副作用，这个端点就是攻击面。生产环境没配密钥时应当**直接拒绝服务**，而不是放行——静默放行比报错危险得多。
+
+**在公开仓库上装 self-hosted runner。** GitHub 官方说这「几乎永远不应该」做——任何人 fork 后提一个 PR 就能在你的机器上执行任意代码，拿到密钥和内网。内网部署要用拉模型：CI 只推产物，目标机主动拉。
 
 **Skills 正文全塞进系统提示。** 违背渐进式披露，几十个 skill 就把上下文占满了。只让名字和描述常驻，正文按需加载。
 
